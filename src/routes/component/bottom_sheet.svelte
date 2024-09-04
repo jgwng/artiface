@@ -39,7 +39,7 @@
       bottom: 0;
       left: 0;
       width: 100%; /* Full width */
-      background-color: #1c1c1e; /* Dark background for dark mode */
+      background-color: #2c2c2e; /* Dark background for dark mode */
       border-top-left-radius: 16px;
       border-top-right-radius: 16px;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -77,26 +77,6 @@
       font-size: 18px;
       color: #007aff; /* iOS-style blue */
       cursor: pointer;
-    }
-  
-    .icon-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      padding: 16px 0;
-    }
-  
-    .icon-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  
-    .icon-item img {
-      width: 60px;
-      height: 60px;
-      background-color: #E5E5EA;
-      border-radius: 15px;
     }
   </style>
   

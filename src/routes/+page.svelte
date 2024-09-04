@@ -3,10 +3,18 @@
     import BottomSheet from './component/bottom_sheet.svelte'; // Import the Bottom Sheet component
     import ColorPicker from './component/color_picker.svelte';  
     import ImageSelector from './component/image_selector.svelte';
+    import ImageSizeSheet from './component/image_size_sheet.svelte';
     
     let loading = true;
     let svgElement;
+    let selectedColor = '#8F8F8F';
+
+    let isBottomSheetVisible = false;
+    let isColorPickerBottomSheetVisible = false;
+    let isSizeSheetVisible = false;
     
+    let currentField = null; 
+
     export let data;
     let {
       accessoriesStyleImages,
@@ -28,15 +36,17 @@
     ];
   
    
-    // State to manage the current selected image for each field
+    
     let selectedImages = {};
   
-    // Initialize selected images with default values from fields
     fields.forEach(field => {
-      selectedImages[field.id] = field.default; // Use the default image when the site is first accessed
+      selectedImages[field.id] = field.default; 
     });
-  
-    // Load SVG and display it in the SVG container
+
+    onMount(() => {
+      loadSVG(`/template.svg`);
+    });
+    
     async function loadSVG(src) {
       loading = true;
       try {
@@ -51,7 +61,7 @@
             svg.style.width = '240px';
             svg.style.height = '240px';
             svg.style.opacity = '0';
-            svg.style.backgroundColor = '#8F8F8F';
+            svg.style.backgroundColor = selectedColor;
             svg.style.borderRadius = '50%';
             svg.style.transition = 'opacity 0.3s linear, transform 0.3s linear';
   
@@ -67,15 +77,7 @@
         loading = false;
       }
     }
-  
-    onMount(() => {
-      loadSVG(`/template.svg`);
-    });
-  
-    let isBottomSheetVisible = false;
-    let isColorPickerBottomSheetVisible = false;
-    let currentField = null; // Track which field is currently being updated
-  
+    
     function handleButtonClick(field) {
       currentField = field;
       showBottomSheet(true);
@@ -92,15 +94,15 @@
     function hideBottomSheet() {
       isBottomSheetVisible = false;
       isColorPickerBottomSheetVisible = false;
+      isSizeSheetVisible = false;
     }
   
     function handleItemSelect(item) {
       if (currentField) {
-        // Update the selected image for the current field
         selectedImages[currentField.id] = item.src;
         handleImageClick(item, currentField.id);
       }
-      hideBottomSheet(); // Close the bottom sheet after selection
+      hideBottomSheet(); 
     }
 
     function handleColorSelect(color) {
@@ -109,24 +111,25 @@
       if (svg) {
             svg.style.backgroundColor = color;
       }
-      hideBottomSheet(); // Close the bottom sheet after selection
+      const circleElement = document.querySelector('.circle');
+      if (circleElement) {
+        circleElement.style.backgroundColor = color;
+      }
+      hideBottomSheet();
     }
   
-      // Unified function to handle image updates and SVG rendering
+    
   async function handleImageClick(item, idPrefix) {
     try {
       const response = await fetch(item.src);
       let svgText = await response.text();
-      console.log('src : '+ item.src);    // Parse the SVG text into an SVG document
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-      // Get the entire SVG element
       const svgElement = svgDoc.querySelector('svg');
 
       const poseElement = document.querySelector(`[id^="${idPrefix}"]`);
       if (poseElement && svgElement) {
-        // Set the innerHTML of poseElement to the full SVG element's outer HTML
         poseElement.innerHTML = svgElement.outerHTML;
       }
 
@@ -134,24 +137,20 @@
       console.error('Error handling image click:', error);
     }
   }
-// Function to pick a random item from each field and update the SVG
 async function updateAllFieldsWithRandomItems() {
   try {
-    // Create an array of promises for updating all fields
+   
     const updatePromises = fields.map(async (field) => {
       if (field.items.length > 0) {
-        // Pick a random item from the field
         const randomIndex = Math.floor(Math.random() * field.items.length);
         const randomItem = field.items[randomIndex];
         selectedImages[field.id] = randomItem.src;
-        // Update the SVG in the DOM using the random item
         await handleImageClick(randomItem, field.id);
       } else {
         console.warn(`No items available for field: ${field.id}`);
       }
     });
 
-    // Wait for all updates to complete
     await Promise.all(updatePromises);
 
     console.log('All fields updated successfully');
@@ -245,6 +244,13 @@ async function updateAllFieldsWithRandomItems() {
       font-size: 14px;
       color: white;
     }
+    .circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #8F8F8F; 
+      transition: background-color 0.2s ease; 
+    }
     /* Media query for mobile browsers */
     @media (max-width: 767px) {
       .screen {
@@ -254,8 +260,6 @@ async function updateAllFieldsWithRandomItems() {
         margin-bottom: 0px !important;
       }
     }
-
-
   </style>
   
   <div class="screen">
@@ -283,14 +287,16 @@ async function updateAllFieldsWithRandomItems() {
       </div>
   
       <div class="keypad-item">
-        <button class="keypad-button" style="background-color:#34C759;" on:click={() => {}}>           
+        <button class="keypad-button" style="background-color:#34C759;" on:click={() => {isSizeSheetVisible=true;}}>           
           <img class="image-button" src='/icon/download.svg' alt='download'/>
         </button>
         <div class="keypad-text">저장</div>
       </div>
   
       <div class="keypad-item">
-        <button class="keypad-button" on:click={() => showBottomSheet(false)}>#</button>
+        <button class="keypad-button" on:click={() => showBottomSheet(false)}>
+          <div class="circle" style="background-color: {selectedColor};"></div>
+        </button>
         <div class="keypad-text">Hash</div>
       </div>
     </div>
@@ -317,3 +323,9 @@ async function updateAllFieldsWithRandomItems() {
     onColorClick={handleColorSelect}
   />
 </BottomSheet>
+
+<ImageSizeSheet
+  visible={isSizeSheetVisible}
+  onClose={hideBottomSheet}
+  title=''
+></ImageSizeSheet>
