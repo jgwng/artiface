@@ -4,15 +4,19 @@
     import ColorPicker from './component/color_picker.svelte';  
     import ImageSelector from './component/image_selector.svelte';
     import ImageSizeSheet from './component/image_size_sheet.svelte';
+    import ImageDownloadDialog from './component/image_download_dialog.svelte';
     
     let loading = true;
+    let showNoticeAlert = false;
+
     let svgElement;
     let selectedColor = '#8F8F8F';
-
+    let imageHTML = '';
     let isBottomSheetVisible = false;
     let isColorPickerBottomSheetVisible = false;
     let isSizeSheetVisible = false;
-    
+    let isImageDownloadDialogVisible = false;
+
     let currentField = null; 
 
     export let data;
@@ -34,16 +38,14 @@
       { name: '입', default: '/assets/mouth/Mouth=Normal_Smile_2.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth' },
       { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit' },
     ];
-  
-   
-    
-    let selectedImages = {};
-  
-    fields.forEach(field => {
-      selectedImages[field.id] = field.default; 
-    });
 
     onMount(() => {
+      const isReloaded = sessionStorage.getItem("isReloaded");
+      if (isReloaded) {
+          showNoticeAlert = true; 
+      }
+      // Clear the reload flag on mount
+      sessionStorage.removeItem("isReloaded");
       loadSVG(`/template.svg`);
     });
     
@@ -54,8 +56,7 @@
         const svgText = await response.text();
   
         if (svgElement) {
-          svgElement.innerHTML = svgText;
-  
+          svgElement.innerHTML = svgText; 
           const svg = svgElement.querySelector('svg');
           if (svg) {
             svg.style.width = '240px';
@@ -70,6 +71,7 @@
               svg.style.transform = 'scale(1)';
             });
           }
+          console.log('svg Style : ' + svg.style.toString());
         }
       } catch (error) {
         console.error('Error loading SVG:', error);
@@ -95,11 +97,11 @@
       isBottomSheetVisible = false;
       isColorPickerBottomSheetVisible = false;
       isSizeSheetVisible = false;
+      isImageDownloadDialogVisible = false;
     }
   
     function handleItemSelect(item) {
       if (currentField) {
-        selectedImages[currentField.id] = item.src;
         handleImageClick(item, currentField.id);
       }
       hideBottomSheet(); 
@@ -117,7 +119,11 @@
       }
       hideBottomSheet();
     }
-  
+
+    function showDownloadSheet() {
+      imageHTML = svgElement.innerHTML;
+      isImageDownloadDialogVisible = true;
+    }
     
   async function handleImageClick(item, idPrefix) {
     try {
@@ -131,8 +137,8 @@
       const poseElement = document.querySelector(`[id^="${idPrefix}"]`);
       if (poseElement && svgElement) {
         poseElement.innerHTML = svgElement.outerHTML;
+        svgElement.innerHTML = imageHTML;
       }
-
     } catch (error) {
       console.error('Error handling image click:', error);
     }
@@ -144,7 +150,6 @@ async function updateAllFieldsWithRandomItems() {
       if (field.items.length > 0) {
         const randomIndex = Math.floor(Math.random() * field.items.length);
         const randomItem = field.items[randomIndex];
-        selectedImages[field.id] = randomItem.src;
         await handleImageClick(randomItem, field.id);
       } else {
         console.warn(`No items available for field: ${field.id}`);
@@ -158,17 +163,27 @@ async function updateAllFieldsWithRandomItems() {
     console.error('Error updating fields:', error);
   }
 }
+
+  function onBeforeUnload(event) {
+		console.log('reload');
+    sessionStorage.setItem("isReloaded", "true");
+	}
   </script>
-  
+ 
+ <svelte:window
+  on:beforeunload={onBeforeUnload}
+ ></svelte:window>
+
+
   <style>
     .screen {
         display: flex;
         flex-direction: column;
         align-items: center;
         width: 100%;
-        min-height: 100vh; /* Ensure the screen takes full height */
+        min-height: 100vh;
         background-color: black;
-        color: white;
+        
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         box-sizing: border-box;
     }
@@ -177,8 +192,9 @@ async function updateAllFieldsWithRandomItems() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center; /* Center items vertically */
-      flex-grow: 1; /* Take up remaining space */
+      justify-content: center;
+      flex-grow: 1; 
+      background-color: black;
       width: 100%;
     }
 
@@ -190,8 +206,8 @@ async function updateAllFieldsWithRandomItems() {
       height: 240px;
       background-color: white;
       border-radius: 50%;
-      margin-bottom: 20px; /* Add some space below */
-      flex-shrink: 0; /* Prevent it from shrinking */
+      margin-bottom: 20px; 
+      flex-shrink: 0; 
     }
 
     .keypad-grid {
@@ -199,7 +215,7 @@ async function updateAllFieldsWithRandomItems() {
       grid-template-columns: repeat(3, 100px);
       grid-gap: 20px;
       justify-items: center;
-      margin-top: auto; /* Allow margin at the top to push grid to bottom if space is available */
+      margin-top: auto; 
       margin-bottom: 20px;
     }
 
@@ -209,24 +225,26 @@ async function updateAllFieldsWithRandomItems() {
       align-items: center;
     }
   
-    .keypad-button {
+    .keypad-button, .save-button  {
       width: 80px;
       height: 80px;
       background-color: #E5E5EA;
       border: none;
       border-radius: 50%;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      display: flex; /* Make the button a flex container */
-      align-items: center; /* Center content vertically */
-      justify-content: center; /* Center content horizontally */
-      position: relative; /* Position relative to allow absolute positioning inside */
+      display: flex;
+      align-items: center; 
+      justify-content: center; 
+      position: relative; 
     }
-  
+    .save-button {
+      background-color: #34C759;
+    }
     .keypad-button img {
-      width: 60%; /* Set a percentage width so the image scales properly */
-      height: 60%; /* Maintain the aspect ratio */
-      object-fit: cover; /* Cover the area without distortion */
-      border-radius: 50%; /* Make the image circular */
+      width: 36px;
+      height: 36px;
+      object-fit: cover; 
+      -webkit-touch-callout:none;
     }
   
     .image-button {
@@ -251,7 +269,7 @@ async function updateAllFieldsWithRandomItems() {
       background-color: #8F8F8F; 
       transition: background-color 0.2s ease; 
     }
-    /* Media query for mobile browsers */
+
     @media (max-width: 767px) {
       .screen {
         padding: 5vh 0 12vh;
@@ -261,33 +279,33 @@ async function updateAllFieldsWithRandomItems() {
       }
     }
   </style>
+
+
   
   <div class="screen">
-    <!-- Content Wrapper for SVG and Keypad Grid -->
     <div class="content-wrapper">
-      <!-- Centered SVG Container -->
+    
       <div class="svg-container" bind:this={svgElement}></div>
     </div>
-     <!-- Keypad Grid -->
      <div class="keypad-grid">
       {#each fields as field}
         <div class="keypad-item">
           <button class="keypad-button" on:click={() => handleButtonClick(field)}>
             <!-- Display the selected image or default if none selected -->
-            <img src={selectedImages[field.id]} alt={field.name} />
+            <img src='/icon/{field.id}_icon.svg' alt={field.name}  oncontextmenu="return false"/>
           </button>
           <div class="keypad-text">{field.name}</div>
         </div>
       {/each}
       <div class="keypad-item">
         <button class="keypad-button" on:click={updateAllFieldsWithRandomItems}>           
-          <img class="image-button" src='/icon/random.svg' alt='random'/>
+          <img class="image-button" src='/icon/random.svg' alt='random' oncontextmenu="return false"/>
          </button>
-        <div class="keypad-text">저장</div>
+        <div class="keypad-text">랜덤</div>
       </div>
   
       <div class="keypad-item">
-        <button class="keypad-button" style="background-color:#34C759;" on:click={() => {isSizeSheetVisible=true;}}>           
+        <button class="save-button" on:click={showDownloadSheet}>           
           <img class="image-button" src='/icon/download.svg' alt='download'/>
         </button>
         <div class="keypad-text">저장</div>
@@ -297,7 +315,7 @@ async function updateAllFieldsWithRandomItems() {
         <button class="keypad-button" on:click={() => showBottomSheet(false)}>
           <div class="circle" style="background-color: {selectedColor};"></div>
         </button>
-        <div class="keypad-text">Hash</div>
+        <div class="keypad-text">배경색</div>
       </div>
     </div>
     
@@ -329,3 +347,10 @@ async function updateAllFieldsWithRandomItems() {
   onClose={hideBottomSheet}
   title=''
 ></ImageSizeSheet>
+
+<ImageDownloadDialog
+  visible={isImageDownloadDialogVisible}
+  onClose={hideBottomSheet}
+  svgText={imageHTML}
+></ImageDownloadDialog>
+
