@@ -46,6 +46,7 @@
       }
       // Clear the reload flag on mount
       sessionStorage.removeItem("isReloaded");
+      console.log('isMobile' + isMobileDevice());
       loadSVG(`/template.svg`);
     });
     
@@ -79,7 +80,9 @@
         loading = false;
       }
     }
-    
+    function isMobileDevice() {
+        return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
     function handleButtonClick(field) {
       currentField = field;
       showBottomSheet(true);
@@ -119,10 +122,21 @@
       }
       hideBottomSheet();
     }
-
+    
     function showDownloadSheet() {
-      imageHTML = svgElement.innerHTML;
-      isImageDownloadDialogVisible = true;
+      if (isMobileDevice()) {
+          imageHTML = svgElement.innerHTML;
+          isImageDownloadDialogVisible = true;
+        } else {
+          const svg = svgElement.outerHTML;
+          const blob = new Blob([svg], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'image.svg';
+          link.click();
+          URL.revokeObjectURL(url);
+        }
     }
     
   async function handleImageClick(item, idPrefix) {
