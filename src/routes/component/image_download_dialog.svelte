@@ -15,18 +15,62 @@
     }
 
     function loadSVGFromStore(svgText) {
-      // Convert the SVG text to a data URL
+      // Convert the SVG text to a DOM object
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
       const svg = svgDoc.querySelector('svg');
 
       if (svg) {
+        // Serialize the SVG to a string
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svg);
-        const encodedSvg = encodeURIComponent(svgString); // Encode the SVG string
-        svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodedSvg}`;
+        
+        // Determine the SVG size
+        let width = svg.getAttribute('width');
+        let height = svg.getAttribute('height');
+
+        // If width or height are not set, use viewBox to determine size
+        if (!width || !height) {
+          const viewBox = svg.getAttribute('viewBox');
+          if (viewBox) {
+            const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+            width = vbWidth;
+            height = vbHeight;
+          } else {
+            // Fallback to a default size if neither width/height nor viewBox is set
+            width = 300;
+            height = 300;
+          }
+        }
+
+        // Create an image object
+        const img = new Image();
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function () {
+          // Create a canvas with the same size as the SVG
+          const canvas = document.createElement('canvas');
+          canvas.width = parseFloat(width);
+          canvas.height = parseFloat(height);
+          const ctx = canvas.getContext('2d');
+
+          // Draw the SVG image on the canvas
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Convert the canvas to a PNG data URL
+          svgDataUrl = canvas.toDataURL('image/png');
+
+          // Clean up the object URL
+          URL.revokeObjectURL(url);
+        };
+
+        // Set the image source to the Blob URL
+        img.src = url;
       }
-  }
+    }
+
+
 
     function handleClose() {
       visible = false;
@@ -125,32 +169,12 @@
       color: #cccccc;
     }
   
-    .dialog-button {
-      background-color: #007aff;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  
     .dialog-footer {
       padding: 10px 20px;
       display: flex;
       align-items: center;
       font-size: 12px;
       color: #cccccc;
-    }
-  
-    .dialog-footer img {
-      width: 24px;
-      height: 24px;
-      margin-right: 8px;
-    }
-  
-    .dialog-footer span {
-      margin-left: auto;
     }
   
     @keyframes fadeInUp {
