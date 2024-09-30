@@ -188,130 +188,113 @@ async function updateAllFieldsWithRandomItems() {
  ></svelte:window>
 
 
-<style>
-  .screen {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center; /* Center horizontally */
-  height: 100vh; /* Full viewport height */
-  width: 100%;
-  background-color: black;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  box-sizing: border-box;
-  padding: 0 40px; /* Horizontal padding added */
-}
+  <style>
+    .screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        min-height: 100vh;
+        background-color: black;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        box-sizing: border-box;
+    }
 
-.content-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center; /* Center content vertically */
-  flex-grow: 1;
-  background-color: black;
-  width: 100%;
-}
+    .content-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1; 
+      background-color: black;
+      width: 100%;
+    }
 
-.svg-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 240px;
-  height: 240px;
-  background-color: white;
-  border-radius: 50%;
-  margin-bottom: 20px;
-  flex-shrink: 0;
-}
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 240px;
+      height: 240px;
+      background-color: white;
+      border-radius: 50%;
+      margin-bottom: 20px; 
+      flex-shrink: 0; 
+    }
 
-.keypad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 100px);
-  grid-gap: 20px;
-  justify-items: center;
- 
-  margin-bottom: 20px;
-}
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 20px;
+      justify-items: center;
+      margin-top: auto; 
+      margin-bottom: 20px;
+    }
 
-.keypad-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    .keypad-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .keypad-button, .save-button  {
+      width: 80px;
+      height: 80px;
+      background-color: #E5E5EA;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center; 
+      justify-content: center; 
+      position: relative; 
+    }
+    .save-button {
+      background-color: #34C759;
+    }
+    .keypad-button img {
+      width: 36px;
+      height: 36px;
+      object-fit: cover; 
+      -webkit-touch-callout:none;
+    }
+  
+    .image-button {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 0% !important;
+    }
+  
+    .keypad-button:active {
+      background-color: #e0e0e0;
+    }
+  
+    .keypad-text {
+      margin-top: 8px;
+      font-size: 14px;
+      color: white;
+    }
+    .circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #8F8F8F; 
+      transition: background-color 0.2s ease; 
+    }
 
-.keypad-button, .save-button {
-  width: 80px;
-  height: 80px;
-  background-color: #E5E5EA;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
+    @media (max-width: 767px) {
+      .screen {
+        padding: 5vh 0 12vh;
+        min-height: 100vh;
+        flex-direction: column;
+      }
+      .keypad-grid {
+        margin-bottom: 0px !important;
+      }
+    }
+  </style>
 
-.save-button {
-  background-color: #34C759;
-}
 
-.keypad-button img {
-  width: 36px;
-  height: 36px;
-  object-fit: cover;
-  -webkit-touch-callout: none;
-}
-
-.image-button {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 0% !important;
-}
-
-.keypad-button:active {
-  background-color: #e0e0e0;
-}
-
-.keypad-text {
-  margin-top: 8px;
-  font-size: 14px;
-  color: white;
-}
-
-.circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #8F8F8F;
-  transition: background-color 0.2s ease;
-}
-
-/* Media query for screens smaller than 767px */
-@media (max-width: 767px) {
-  .screen {
-    padding: 5vh 0 12vh;
-    min-height: 100vh;
-    flex-direction: column;
-  }
-
-  .content-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-    background-color: black;
-    width: 100%;
-  }
-
-  .keypad-grid {
-    margin-top: auto !important;
-    margin-bottom: 0px !important;
-  }
-}
-
-</style>
   
   <div class="screen">
     <div class="content-wrapper">
