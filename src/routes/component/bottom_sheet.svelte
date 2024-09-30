@@ -27,7 +27,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: transparent;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -48,6 +48,9 @@
       transition: transform 0.3s ease-out;
       transform: translateY(100%);
       z-index: 1202;
+      height: 50vh;
+      max-height: 50vh;
+      overflow-y: auto; /* Allow scrolling if content exceeds the height */
     }
   
     .overlay.active {
@@ -75,7 +78,7 @@
   
     .header-close {
       font-size: 18px;
-      color: #007aff; /* iOS-style blue */
+      color: white; /* iOS-style blue */
       cursor: pointer;
     }
   </style>
