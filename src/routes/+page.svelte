@@ -272,16 +272,21 @@
   .action-button {
     width: calc(100% - 48px); /* Full width minus 16px padding on each side */
     height: 56px;
-    margin: 20px 24px; /* Ensure there is space between the button and other elements */
-    background-color: #388E3C; /* Button background color (you can customize this) */
+    margin: 20px 24px; /* Space between the button and other elements */
+    background-color: #388E3C; /* Background color */
     color: white;
-    border: none;
     border-radius: 8px;
     font-size: 24px;
     font-weight: 500;
-    text-align: center;
+    font-weight: bold;
     cursor: pointer;
-    box-sizing: border-box; /* Ensures padding is included within width */
+    box-sizing: border-box; /* Ensures padding is included in the width */
+    
+    /* Center the text */
+    display: flex;
+    justify-content: center; /* Horizontally centers the text */
+    align-items: center;     /* Vertically centers the text */
+    text-align: center;      /* Ensures the text is centered */
 }
   @media (max-width: 767px) {
       .screen {
@@ -311,7 +316,9 @@
       {/each}
   </div>
 
-  <div class="action-button" on:click={() => showDownloadSheet()}>저장</div>
+  <div class="action-button" on:click={() => showDownloadSheet()}>
+     이미지 저장
+  </div>
 </div>
 
 <!-- Bottom Sheets and Dialogs -->
