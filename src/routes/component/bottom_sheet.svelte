@@ -38,8 +38,9 @@
       position: fixed;
       bottom: 0;
       left: 0;
-      width: 100%; /* Full width */
-      background-color: #2c2c2e; /* Dark background for dark mode */
+      width: 100vw; /* Full window width */
+      max-width: 100vw; /* Ensure it doesn't exceed the window width */
+      background-color: #2c2c2e;
       border-top-left-radius: 16px;
       border-top-right-radius: 16px;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -50,8 +51,9 @@
       z-index: 1202;
       height: 50vh;
       max-height: 50vh;
-      overflow-y: auto; /* Allow scrolling if content exceeds the height */
-    }
+      display: flex;
+      flex-direction: column;
+    } 
   
     .overlay.active {
       visibility: visible;
@@ -61,15 +63,16 @@
     .popup-container.open {
       transform: translateY(0);
     }
-  
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding-bottom: 12px;
       border-bottom: 1px solid #333;
+      flex-shrink: 0; /* Prevents the header from shrinking or scrolling */
     }
-  
+
     .header-title {
       color: white;
       font-size: 16px;
@@ -80,6 +83,11 @@
       font-size: 18px;
       color: white; /* iOS-style blue */
       cursor: pointer;
+    }
+    .content {
+      flex-grow: 1; /* Takes the remaining height of the container */
+      overflow-y: auto; /* Only the content inside will scroll */
+      padding-top: 12px; /* Space between header and content */
     }
   </style>
   
@@ -93,6 +101,8 @@
     </div>
   
     <!-- Icon Grid -->
-    <slot></slot>
+    <div class="content">
+      <slot></slot>
+    </div>
   </div>
   

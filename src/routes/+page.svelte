@@ -10,7 +10,7 @@
   let loading = true;
   let showNoticeAlert = false;
   let svgElement;
-  let selectedColor = '#8F8F8F';
+  let selectedColor = 'rgb(243,234,222,1.0)';
   let imageHTML = '';
   
   // Visibility states for different sheets/dialogs
@@ -36,8 +36,17 @@
   // Load the SVG on mount
   onMount(() => {
       handleReloadState();
+      setScreenSize();
+      window.addEventListener('resize', () => setScreenSize());
       loadSVG(`/template.svg`);
   });
+  
+  function setScreenSize() {
+    let vh = window.innerHeight * 0.01;
+
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+
 
   function handleReloadState() {
       const isReloaded = sessionStorage.getItem("isReloaded");
@@ -191,110 +200,6 @@
 
 <svelte:window on:beforeunload={onBeforeUnload}></svelte:window>
 
-<!-- Styles -->
-<style>
-  /* General layout styles */
-  .screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      min-height: 100vh;
-      background-color: black;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      box-sizing: border-box;
-  }
-
-  .content-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: black;
-      width: 100%;
-  }
-
-  .svg-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 240px;
-      height: 240px;
-      margin-top:30px;
-      margin-bottom:30px;
-      background-color: white;
-      border-radius: 50%;
-      flex-shrink: 0;
-  }
-  .icon-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
-    width: 100%;
-    padding:0 24px;
-    gap: 8px;
-    box-sizing: border-box; /* Ensure padding is included within the width */
-  }
-
-  .icon-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #2C2C2E;
-      border-radius: 12px;
-      padding: 16px;
-      height: 96px;
-  }
-
-  .icon-item img {
-      width: 48px;
-      height: 48px;
-      margin-bottom: 8px;
-  }
-
-  .icon-item p {
-      margin: 0;
-      color: #A3A3A3;
-  }
-  
-  .main-title {
-    text-align: center;
-    margin-top: 48px;
-    color: white;
-  }
-
-  .main-title h1 {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 0;
-    color: white;
-  }
-  .action-button {
-    width: calc(100% - 48px); /* Full width minus 16px padding on each side */
-    height: 56px;
-    margin: 20px 24px; /* Space between the button and other elements */
-    background-color: #388E3C; /* Background color */
-    color: white;
-    border-radius: 8px;
-    font-size: 24px;
-    font-weight: 500;
-    font-weight: bold;
-    cursor: pointer;
-    box-sizing: border-box; /* Ensures padding is included in the width */
-    
-    /* Center the text */
-    display: flex;
-    justify-content: center; /* Horizontally centers the text */
-    align-items: center;     /* Vertically centers the text */
-    text-align: center;      /* Ensures the text is centered */
-}
-  @media (max-width: 767px) {
-      .screen {
-          min-height: 100vh;
-          flex-direction: column;
-      }
-  }
-</style>
 
 <!-- Layout -->
 <div class="screen">
@@ -310,7 +215,7 @@
   <div class="icon-grid">
       {#each fields as field}
           <div class="icon-item" on:click={() => handleButtonClick(field)}>
-              <img src='/icon/{field.id}_icon.svg' oncontextmenu="return false" />
+              <img src='/icon/{field.id}_icon.svg' oncontextmenu="return false"  unselectable="on"/>
               <p>{field.name}</p>
           </div>
       {/each}
