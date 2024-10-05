@@ -3,8 +3,9 @@
   import BottomSheet from './component/bottom_sheet.svelte';
   import ColorPicker from './component/color_picker.svelte';  
   import ImageSelector from './component/image_selector.svelte';
-  import ImageSizeSheet from './component/image_size_sheet.svelte';
+  import ImageConfirmSheet from './component/image_size_sheet.svelte';
   import ImageDownloadDialog from './component/image_download_dialog.svelte';
+  import { get } from 'svelte/store';
 
   // Component state variables
   let loading = true;
@@ -16,7 +17,7 @@
   // Visibility states for different sheets/dialogs
   let isBottomSheetVisible = false;
   let isColorPickerBottomSheetVisible = false;
-  let isSizeSheetVisible = false;
+  let isConfirmSheetVisible = true;
   let isImageDownloadDialogVisible = false;
   let currentField = null;
 
@@ -25,28 +26,19 @@
 
   // Fields configuration for icon grid
   const fields = [
-      { name: '악세사리', default: '/assets/accessories/Accesories=Stylish_Glasses.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories' },
-      { name: '눈', default: '/assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes' },
-      { name: '헤어스타일', default: '/assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair' },
-      { name: '얼굴형태', default: '/assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head' },
-      { name: '입', default: '/assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth' },
-      { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit' },
+      { name: '악세사리', default: '/assets/accessories/Accesories=Stylish_Glasses.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories'},
+      { name: '눈', default: '/assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes'},
+      { name: '헤어스타일', default: '/assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair'},
+      { name: '얼굴형태', default: '/assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head'},
+      { name: '입', default: '/assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth'},
+      { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit'},
   ];
 
   // Load the SVG on mount
   onMount(() => {
       handleReloadState();
-      setScreenSize();
-      window.addEventListener('resize', () => setScreenSize());
       loadSVG(`/template.svg`);
   });
-  
-  function setScreenSize() {
-    let vh = window.innerHeight * 0.01;
-
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-  }
-
 
   function handleReloadState() {
       const isReloaded = sessionStorage.getItem("isReloaded");
@@ -60,14 +52,19 @@
   async function loadSVG(src) {
       loading = true;
       try {
+          let svgText = '';
+         
           const response = await fetch(src);
-          const svgText = await response.text();
-
+            svgText = await response.text();
+          
           if (svgElement) {
-              svgElement.innerHTML = svgText; 
+              svgElement.innerHTML = svgText;
               const svg = svgElement.querySelector('svg');
               if (svg) {
                   applySVGStyles(svg);
+                  if(localStorage.length !== 0){
+                    isConfirmSheetVisible = true;
+                  }
               }
           }
       } catch (error) {
@@ -75,6 +72,28 @@
       } finally {
           loading = false;
       }
+  }
+  function applyPrevAssets() {
+    isConfirmSheetVisible = false;
+
+    for (const field of fields) {
+        // Find the corresponding element in the DOM
+        const partElement = document.querySelector(`[id^="${field.id}"]`);
+        
+        // Retrieve the stored SVG string from localStorage
+        const prevElement = localStorage.getItem(field.id);
+
+        // If the SVG string exists and the DOM element is found, apply the saved SVG
+        if (prevElement && partElement) {
+        partElement.innerHTML = prevElement; // Inject the stored SVG into the DOM
+        } else {
+        console.warn(`No saved SVG found for ${field.id} in localStorage or element not found.`);
+        }
+        }
+  }
+  function clearPrevData() {
+    isConfirmSheetVisible = false;
+    localStorage.clear();
   }
 
   function applySVGStyles(svg) {
@@ -113,7 +132,7 @@
   function hideBottomSheet() {
       isBottomSheetVisible = false;
       isColorPickerBottomSheetVisible = false;
-      isSizeSheetVisible = false;
+      isConfirmSheetVisible = false;
       isImageDownloadDialogVisible = false;
   }
 
@@ -162,33 +181,15 @@
           const parser = new DOMParser();
           const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-          const svgElement = svgDoc.querySelector('svg');
+          const itemElement = svgDoc.querySelector('svg');
           const poseElement = document.querySelector(`[id^="${idPrefix}"]`);
-          if (poseElement && svgElement) {
-              poseElement.innerHTML = svgElement.outerHTML;
+          if (poseElement && itemElement) {
+              poseElement.innerHTML = itemElement.outerHTML;
           }
+          const currentField = fields.find(field => field.id === idPrefix);
+          localStorage.setItem(idPrefix, itemElement.outerHTML); 
       } catch (error) {
           console.error('Error handling image click:', error);
-      }
-  }
-
-  // Update all fields with random items
-  async function updateAllFieldsWithRandomItems() {
-      try {
-          const updatePromises = fields.map(async (field) => {
-              if (field.items.length > 0) {
-                  const randomIndex = Math.floor(Math.random() * field.items.length);
-                  const randomItem = field.items[randomIndex];
-                  await handleImageClick(randomItem, field.id);
-              } else {
-                  console.warn(`No items available for field: ${field.id}`);
-              }
-          });
-
-          await Promise.all(updatePromises);
-          console.log('All fields updated successfully');
-      } catch (error) {
-          console.error('Error updating fields:', error);
       }
   }
 
@@ -235,6 +236,6 @@
   <ColorPicker onColorClick={handleColorSelect} />
 </BottomSheet>
 
-<ImageSizeSheet visible={isSizeSheetVisible} onClose={hideBottomSheet} title='' />
+<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyPrevAssets} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' />
 
 <ImageDownloadDialog visible={isImageDownloadDialogVisible} onClose={hideBottomSheet} svgText={imageHTML} />

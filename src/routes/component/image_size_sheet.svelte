@@ -1,7 +1,11 @@
 <script>
     export let visible = false;
-    export let onClose; // Prop for the close action handler
+    export let onClose;
+    export let onTapTopButton; 
+    export let onTapBottomButton; // Prop for the close action handler
     export let title;
+    export let topButtonText;
+    export let bottomButtonText;
     function toggleSheet() {
       visible = !visible;
     }
@@ -45,6 +49,7 @@
   
     .action-sheet-container.open {
       transform: translateY(0);
+      margin-bottom: 24px;
     }
   
     .action-sheet {
@@ -54,71 +59,52 @@
       overflow: hidden;
     }
   
-    .action-sheet-header,
-    .action-sheet-button,
-    .action-sheet-cancel {
+    .action-sheet-header {
       display: flex;
       justify-content: center;
       align-items: center;
-      text-align: center;
-    }
-  
-    .action-sheet-header {
-      height: 42px;
-      font-weight: bold;
-      color: #ffffff;
+      flex-direction: column;
       border-bottom: 1px solid #3a3a3c;
+      padding-top: 24px;
+      
     }
-  
-    .action-sheet-button {
-      height: 60px;
+    .action-sheet-header img{
+      width: 120px;
+      height: 120px;
+    }
+    .action-sheet-header p{
+      text-align: center;
+      font-weight: bold;
       font-size: 20px;
-      color: #409cff;
-      cursor: pointer;
-      border: none;
-      width: 100%;
-      background: none;
-      border-top: 1px solid #3a3a3c;
+     
+      color: #ffffff;
     }
-  
+    
     .action-sheet-button:first-child {
       border-top: none;
     }
-  
-    .action-sheet-button.destructive {
-      color: #ff3b30;
-    }
-  
-    .action-sheet-cancel {
-      width: 100%;
-      height: 60px;
-      font-size: 20px;
-      color: #409cff;
-      cursor: pointer;
-      background-color: #2c2c2e;
-      border-radius: 16px;
-      border: 1px solid #3a3a3c;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-      margin: 8px 0; /* Combines top and bottom margins */
-    }
+    
   </style>
   
   {#if visible}
-    <div class="overlay active" on:click={handleBackgroundClick}></div>
+    <div class="overlay active"></div>
   {/if}
   
   <div class="action-sheet-container {visible ? 'open' : ''}">
     <div class="action-sheet">
       <div class="action-sheet-header">
-        {title}
+        <img src='../icon/restore.svg' oncontextmenu="return false"  unselectable="on"/>
+        <p>{title}</p>
       </div>
       <div class="action-sheet-body">
-        <button class="action-sheet-button" on:click={toggleSheet}>Action</button>
-        <button class="action-sheet-button destructive" on:click={toggleSheet}>Action</button>
-        <button class="action-sheet-button" on:click={toggleSheet}>Action</button>
+        <div class="action-sheet-button" on:click={onTapTopButton}>
+          {topButtonText}
+        </div>
+        <div class="action-sheet-button close" on:click={onTapBottomButton}>
+          {bottomButtonText}
+       </div>
       </div>
     </div>
   
-    <button class="action-sheet-cancel" on:click={toggleSheet}>Cancel</button>
   </div>
   
