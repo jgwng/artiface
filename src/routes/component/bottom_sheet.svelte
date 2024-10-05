@@ -49,8 +49,8 @@
       transition: transform 0.3s ease-out;
       transform: translateY(100%);
       z-index: 1202;
-      height: 50vh;
-      max-height: 50vh;
+      height: 45vh;
+      max-height: 45vh;
       display: flex;
       flex-direction: column;
     } 

@@ -4,6 +4,8 @@ import path from 'path';
 function getSvgImagesFromDir(type) {
     const directory = path.join('static','assets',type);
     const files = fs.readdirSync(directory).filter(file => file.endsWith('.svg'));
+    console.log('type : ' + type);
+    console.log('length : ' + files.length);
     return files.map((file, index) => ({
         id: index + 1,
         src: `assets/${type}/${file}`

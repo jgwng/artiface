@@ -17,7 +17,7 @@
   // Visibility states for different sheets/dialogs
   let isBottomSheetVisible = false;
   let isColorPickerBottomSheetVisible = false;
-  let isConfirmSheetVisible = true;
+  let isConfirmSheetVisible = false;
   let isImageDownloadDialogVisible = false;
   let currentField = null;
 
@@ -85,11 +85,11 @@
 
         // If the SVG string exists and the DOM element is found, apply the saved SVG
         if (prevElement && partElement) {
-        partElement.innerHTML = prevElement; // Inject the stored SVG into the DOM
+            partElement.innerHTML = prevElement; // Inject the stored SVG into the DOM
         } else {
-        console.warn(`No saved SVG found for ${field.id} in localStorage or element not found.`);
+            console.warn(`No saved SVG found for ${field.id} in localStorage or element not found.`);
         }
-        }
+    }
   }
   function clearPrevData() {
     isConfirmSheetVisible = false;
@@ -118,6 +118,7 @@
   // Handle button clicks to show bottom sheet
   function handleButtonClick(field) {
       currentField = field;
+      svgElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showBottomSheet(true);
   }
 
