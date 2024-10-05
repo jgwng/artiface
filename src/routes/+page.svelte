@@ -12,6 +12,7 @@
   // Component state variables
   let loading = true;
   let svgElement;
+  let titleElement;
   let selectedColor = 'rgb(243,234,222,1.0)';
   let imageHTML = '';
   
@@ -37,7 +38,11 @@
 
   // Load the SVG on mount
   onMount(() => {
-      loadSVG(`/template.svg`);
+        if(isMobileDevice() === false){
+            titleElement.style.paddingTop = '48px';
+        }
+        loadSVG(`/template.svg`);
+      
   });
   
   // Load SVG from the specified source
@@ -213,7 +218,7 @@
 <!-- Layout -->
 <div class="screen">
   
-  <div class="main-title">
+  <div class="main-title" bind:this={titleElement}>
     <h1>당신의 스타일로 편집하세요</h1>
   </div>
 
