@@ -6,10 +6,11 @@
   import ImageConfirmSheet from './component/image_size_sheet.svelte';
   import ImageDownloadDialog from './component/image_download_dialog.svelte';
   import { get } from 'svelte/store';
-
+  import { page } from "$app/stores"; 
+  import {replaceState} from "$app/navigation";
+  
   // Component state variables
   let loading = true;
-  let showNoticeAlert = false;
   let svgElement;
   let selectedColor = 'rgb(243,234,222,1.0)';
   let imageHTML = '';
@@ -22,32 +23,23 @@
   let currentField = null;
 
   export let data;
-  let { accessoriesStyleImages, eyesStyleImages, hairStyleImages, headStyleImages, mouthStyleImages, outfitStyleImages } = data;
+  let { COMPONENTCODE, accessoriesStyleImages, eyesStyleImages, hairStyleImages, headStyleImages, mouthStyleImages, outfitStyleImages } = data;
 
   // Fields configuration for icon grid
   const fields = [
-      { name: '악세사리', default: '/assets/accessories/Accesories=Stylish_Glasses.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories'},
-      { name: '눈', default: '/assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes'},
-      { name: '헤어스타일', default: '/assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair'},
-      { name: '얼굴형태', default: '/assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head'},
-      { name: '입', default: '/assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth'},
-      { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit'},
+      { name: '악세사리', default: '/assets/accessories/Accesories=Stylish_Glasses.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories',code: 'A'},
+      { name: '눈', default: '/assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes',code:'A'},
+      { name: '헤어스타일', default: '/assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair',code: 'A'},
+      { name: '얼굴형태', default: '/assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head',code: 'A'},
+      { name: '입', default: '/assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth',code: 'A'},
+      { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit',code: 'A'},
   ];
 
   // Load the SVG on mount
   onMount(() => {
-      handleReloadState();
       loadSVG(`/template.svg`);
   });
-
-  function handleReloadState() {
-      const isReloaded = sessionStorage.getItem("isReloaded");
-      if (isReloaded) {
-          showNoticeAlert = true;
-      }
-      sessionStorage.removeItem("isReloaded");
-  }
-
+  
   // Load SVG from the specified source
   async function loadSVG(src) {
       loading = true;
@@ -62,7 +54,7 @@
               const svg = svgElement.querySelector('svg');
               if (svg) {
                   applySVGStyles(svg);
-                  if(localStorage.length !== 0){
+                  if(checkCodeData() === true){
                     isConfirmSheetVisible = true;
                   }
               }
@@ -73,24 +65,35 @@
           loading = false;
       }
   }
-  function applyPrevAssets() {
-    isConfirmSheetVisible = false;
+  function checkCodeData() {
+    
+    const params = new URLSearchParams(window.location.search);
 
-    for (const field of fields) {
-        // Find the corresponding element in the DOM
-        const partElement = document.querySelector(`[id^="${field.id}"]`);
-        
-        // Retrieve the stored SVG string from localStorage
-        const prevElement = localStorage.getItem(field.id);
+    if(params.has('code') === false) return false;
+    
+    const codeValue = params.get('code'); // Get the value of 'code'
+    if (codeValue.length === 6) {
+        return true;
+    }
+    return false;
+  }
 
-        // If the SVG string exists and the DOM element is found, apply the saved SVG
-        if (prevElement && partElement) {
-            partElement.innerHTML = prevElement; // Inject the stored SVG into the DOM
-        } else {
-            console.warn(`No saved SVG found for ${field.id} in localStorage or element not found.`);
+  async function applyCodeData() {
+    const params = new URLSearchParams(window.location.search);
+    const codeValue = params.get('code'); 
+    const codeList = codeValue.split('');
+    for (const [index, char] of codeList.entries()) {
+        let field = fields[index];
+        let codeIndex = COMPONENTCODE.lastIndexOf(char);
+        if (codeIndex < field.items.length && codeIndex > 0) {
+            await handleImageClick(field.items[codeIndex], field.id);
+            field.code = char; 
         }
     }
-  }
+    isConfirmSheetVisible = false;
+}
+
+
   function clearPrevData() {
     isConfirmSheetVisible = false;
     localStorage.clear();
@@ -141,6 +144,7 @@
   function handleItemSelect(item) {
       if (currentField) {
           handleImageClick(item, currentField.id);
+          updateQueryParam(item, currentField.id);
       }
   }
 
@@ -187,21 +191,24 @@
           if (poseElement && itemElement) {
               poseElement.innerHTML = itemElement.outerHTML;
           }
-          const currentField = fields.find(field => field.id === idPrefix);
-          localStorage.setItem(idPrefix, itemElement.outerHTML); 
-      } catch (error) {
-          console.error('Error handling image click:', error);
-      }
+         
+        }
+         catch (error) {
+            console.error('Error handling image click:', error);
+        }
+  }
+  function updateQueryParam(item, idPrefix) {
+    const currentField = fields.find(field => field.id === idPrefix);
+    let  newCode = COMPONENTCODE[item.id];
+    currentField.code = newCode;
+    const joinedCodes = fields.map(field => field.code).join('');
+    const params = new URLSearchParams(window.location.search);
+    params.set('code', joinedCodes);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    replaceState(newUrl);
   }
 
-  // Handle page reload
-  function onBeforeUnload(event) {
-      sessionStorage.setItem("isReloaded", "true");
-  }
 </script>
-
-<svelte:window on:beforeunload={onBeforeUnload}></svelte:window>
-
 
 <!-- Layout -->
 <div class="screen">
@@ -237,6 +244,6 @@
   <ColorPicker onColorClick={handleColorSelect} />
 </BottomSheet>
 
-<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyPrevAssets} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' />
+<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyCodeData} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' />
 
 <ImageDownloadDialog visible={isImageDownloadDialogVisible} onClose={hideBottomSheet} svgText={imageHTML} />
