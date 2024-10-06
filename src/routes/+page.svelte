@@ -3,8 +3,10 @@
   import BottomSheet from './component/bottom_sheet.svelte';
   import ColorPicker from './component/color_picker.svelte';  
   import ImageSelector from './component/image_selector.svelte';
-  import ImageConfirmSheet from './component/image_size_sheet.svelte';
+  import ImageConfirmSheet from './component/image_confirm_sheet.svelte';
   import ImageDownloadDialog from './component/image_download_dialog.svelte';
+  import CopyrightModal from './component/copyright_modal.svelte';
+  
   import { get } from 'svelte/store';
   import { page } from "$app/stores"; 
   import {replaceState} from "$app/navigation";
@@ -18,10 +20,13 @@
   
   // Visibility states for different sheets/dialogs
   let isBottomSheetVisible = false;
-  let isColorPickerBottomSheetVisible = false;
+  let isCopyrightModalVisible = false;
   let isConfirmSheetVisible = false;
+  let isRedirectNoticeSheetVisible = false;
   let isImageDownloadDialogVisible = false;
   let currentField = null;
+
+  let isRedirected = false;
 
   export let data;
   let { COMPONENTCODE, accessoriesStyleImages, eyesStyleImages, hairStyleImages, headStyleImages, mouthStyleImages, outfitStyleImages } = data;
@@ -38,13 +43,26 @@
 
   // Load the SVG on mount
   onMount(() => {
-        if(isMobileDevice() === false){
-            titleElement.style.paddingTop = '48px';
-        }
+        isRedirected = checkRedirection();
         loadSVG(`/template.svg`);
-      
   });
-  
+
+  function checkRedirection() {
+    const referrerChecks = ["threads", "slack"];
+    const userAgentChecks = ["KAKAO", "FB", "Instagram", "trill"];
+    
+    // Check referrer
+    const isRedirectedFromReferrer = referrerChecks.some(referrer => document.referrer.includes(referrer));
+
+    // Check user agent
+    const isRedirectedFromUserAgent = userAgentChecks.some(agent => navigator.userAgent.includes(agent));
+
+    // If either referrer or user agent matches, set isRedirected to true
+    const isRedirect = isRedirectedFromReferrer || isRedirectedFromUserAgent;
+
+    return isRedirect;
+}
+
   // Load SVG from the specified source
   async function loadSVG(src) {
       loading = true;
@@ -59,6 +77,9 @@
               const svg = svgElement.querySelector('svg');
               if (svg) {
                   applySVGStyles(svg);
+                  
+                  if(isRedirected === true) return;
+
                   if(checkCodeData() === true){
                     isConfirmSheetVisible = true;
                   }
@@ -101,7 +122,8 @@
 
   function clearPrevData() {
     isConfirmSheetVisible = false;
-    localStorage.clear();
+    const newUrl = `${window.location.pathname}`;
+    replaceState(newUrl);
   }
 
   function applySVGStyles(svg) {
@@ -127,22 +149,15 @@
   function handleButtonClick(field) {
       currentField = field;
       svgElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showBottomSheet(true);
-  }
-
-  function showBottomSheet(isImage) {
-      if (isImage) {
-          isBottomSheetVisible = true;
-      } else {
-          isColorPickerBottomSheetVisible = true;
-      }
+      isBottomSheetVisible = true;
   }
 
   function hideBottomSheet() {
       isBottomSheetVisible = false;
-      isColorPickerBottomSheetVisible = false;
+      isCopyrightModalVisible = false;
       isConfirmSheetVisible = false;
       isImageDownloadDialogVisible = false;
+      isRedirectNoticeSheetVisible= false;
   }
 
   // Handle item selection from image selector
@@ -168,6 +183,11 @@
 
   // Download the SVG or show download dialog
   function showDownloadSheet() {
+      if(isRedirected === true){
+        isRedirectNoticeSheetVisible = true;
+        return;
+      }
+
       if (isMobileDevice()) {
           imageHTML = svgElement.innerHTML;
           isImageDownloadDialogVisible = true;
@@ -202,6 +222,7 @@
             console.error('Error handling image click:', error);
         }
   }
+
   function updateQueryParam(item, idPrefix) {
     const currentField = fields.find(field => field.id === idPrefix);
     let  newCode = COMPONENTCODE[item.id];
@@ -213,12 +234,30 @@
     replaceState(newUrl);
   }
 
+  function onTapCopyRight(){
+    // isCopyrightModalVisible = true;
+  }
+  
+  async function copyCurrentUrl() {
+    try {
+      const code = fields.map(field => field.code).join('');
+      const newUrl = `${window.location.pathname}?code=${code}`;
+      await navigator.clipboard.writeText(newUrl); // Copy URL to clipboard
+      alert("URL이 복사되었습니다!"); // Success message
+      isRedirectNoticeSheetVisible = false;  
+    } catch (error) {
+      console.error("URL 복사에 실패했습니다:", error);
+    }
+  }
 </script>
 
 <!-- Layout -->
 <div class="screen">
-  
-  <div class="main-title" bind:this={titleElement}>
+    <div class="copyright">
+        <img src='/icon/copyright.svg' oncontextmenu="return false"  unselectable="on"/>
+    </div>
+    
+  <div class="main-title">
     <h1>당신의 스타일로 편집하세요</h1>
   </div>
 
@@ -240,15 +279,20 @@
   </div>
 </div>
 
+
 <!-- Bottom Sheets and Dialogs -->
 <BottomSheet visible={isBottomSheetVisible} onClose={hideBottomSheet} title={currentField ? currentField.title : ''}>
   <ImageSelector items={currentField ? currentField.items : []} onImageClick={handleItemSelect} />
 </BottomSheet>
 
-<BottomSheet visible={isColorPickerBottomSheetVisible} onClose={hideBottomSheet} title='배경색 설정'>
-  <ColorPicker onColorClick={handleColorSelect} />
-</BottomSheet>
+<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyCodeData} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' icon='restore'/>
 
-<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyCodeData} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' />
+<ImageConfirmSheet visible={isRedirectNoticeSheetVisible} onTapTopButton={copyCurrentUrl} onTapBottomButton={hideBottomSheet} 
+      title='인앱 브라우저에서는 저장이 제한됩니다.'  subtitle='링크를 복사하고 Safari에서 이미지를 저장해 주세요.' topButtonText='링크 복사할게요' bottomButtonText = '다음에 할게요' icon='notice'/>
 
 <ImageDownloadDialog visible={isImageDownloadDialogVisible} onClose={hideBottomSheet} svgText={imageHTML} />
+
+<CopyrightModal isModalVisible={isCopyrightModalVisible} onClose={hideBottomSheet}>
+</CopyrightModal>
+
+

@@ -4,8 +4,13 @@
     export let onTapTopButton; 
     export let onTapBottomButton; // Prop for the close action handler
     export let title;
+    export let subtitle;
+  
     export let topButtonText;
     export let bottomButtonText;
+    export let icon;
+    
+    
     function toggleSheet() {
       visible = !visible;
     }
@@ -83,7 +88,13 @@
     .action-sheet-button:first-child {
       border-top: none;
     }
-    
+    .description {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+      text-align: center;
+    }
+  
   </style>
   
   {#if visible}
@@ -93,8 +104,15 @@
   <div class="action-sheet-container {visible ? 'open' : ''}">
     <div class="action-sheet">
       <div class="action-sheet-header">
-        <img src='../icon/restore.svg' oncontextmenu="return false"  unselectable="on"/>
-        <p>{title}</p>
+        <img src='../icon/{icon}.svg' oncontextmenu="return false"  unselectable="on"/>
+        {#if subtitle}
+          <div style="padding-top:16px;padding-bottom:16px;">
+            <div class="description">{title}</div>
+            <div class="description" style="padding-top:4px;">{subtitle}</div>
+          </div>
+        {:else}
+          <p>{title}</p>
+        {/if}
       </div>
       <div class="action-sheet-body">
         <div class="action-sheet-button" on:click={onTapTopButton}>
