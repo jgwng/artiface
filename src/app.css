@@ -192,9 +192,7 @@ button:focus:not(:focus-visible) {
   color: white;
 }
 .action-button, .action-sheet-button {
-  width: calc(100% - 48px); 
-  height: 56px;
-  margin: 20px 24px;
+  width: 100%;
   background-color: #9552D4; 
   color: white;
   border-radius: 8px;
@@ -204,10 +202,24 @@ button:focus:not(:focus-visible) {
   align-items: center;    
   text-align: center;    
 }
+
+.action-sheet-button{
+	width: calc(100% - 48px); 
+  	height: 56px;
+  	margin: 20px 24px;
+}
+.action-button-row{
+	display: flex;
+	flex-direction: row;
+	width: calc(100% - 48px); 
+  	height: 56px;
+  	margin: 20px 24px;
+}
 .action-button{
 	font-size: 24px;
 	font-family: 'Pretendard';
 	font-weight: 700;
+	
 	cursor: pointer;
 }
 .action-sheet-button{

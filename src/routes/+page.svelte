@@ -33,17 +33,24 @@
 
   // Fields configuration for icon grid
   const fields = [
-      { name: '악세사리', default: '/assets/accessories/Accesories=Stylish_Glasses.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories',code: 'A'},
-      { name: '눈', default: '/assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes',code:'A'},
-      { name: '헤어스타일', default: '/assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair',code: 'A'},
-      { name: '얼굴형태', default: '/assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head',code: 'A'},
-      { name: '입', default: '/assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth',code: 'A'},
-      { name: '상의', default: '/assets/outfit/Outfit=Style04.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit',code: 'A'},
+      { name: '악세사리', default: 'assets/accessories/Accesories28.svg', items: accessoriesStyleImages, title: '악세서리 설정', id: 'accessories',code: 'B'},
+      { name: '눈', default: 'assets/eyes/Eyes12.svg', items: eyesStyleImages, title: '눈 설정', id: 'eyes',code:'P'},
+      { name: '헤어스타일', default: 'assets/hair/Hair=Style02.svg', items: hairStyleImages, title: '헤어스타일 설정', id: 'hair',code: 'P'},
+      { name: '얼굴형태', default: 'assets/head/Head03.svg', items: headStyleImages, title: '얼굴형 설정', id: 'head',code: 'P'},
+      { name: '입', default: 'assets/mouth/Mouth22.svg', items: mouthStyleImages, title: '입 설정', id: 'mouth',code: 'T'},
+      { name: '상의', default: 'assets/outfit/Outfit47.svg', items: outfitStyleImages, title: '상의 설정', id: 'outfit',code: 'M'},
   ];
 
   // Load the SVG on mount
   onMount(() => {
         isRedirected = checkRedirection();
+        fields.map(field => {
+           const currentIndex = field.items.findIndex(item => item.src === field.default);
+           console.log('currentIndex : ' + field.id);
+           console.log('currentIndex : ' + currentIndex);
+           console.log('currentIndex : ' + COMPONENTCODE[currentIndex]);
+        });
+        
         loadSVG(`/template.svg`);
   });
 
@@ -79,9 +86,16 @@
                   applySVGStyles(svg);
                   
                   if(isRedirected === true) return;
-
+                
                   if(checkCodeData() === true){
-                    isConfirmSheetVisible = true;
+                    await applyCodeData();
+                    clearPrevData();
+                    return;
+                  }
+
+                  let code = localStorage.getItem('code');
+                  if(code){
+                     isConfirmSheetVisible = true;
                   }
               }
           }
@@ -107,12 +121,13 @@
   async function applyCodeData() {
     const params = new URLSearchParams(window.location.search);
     const codeValue = params.get('code'); 
+    
     const codeList = codeValue.split('');
     for (const [index, char] of codeList.entries()) {
         let field = fields[index];
         let codeIndex = COMPONENTCODE.lastIndexOf(char);
-        if (codeIndex < field.items.length && codeIndex > 0) {
-            await handleImageClick(field.items[codeIndex], field.id);
+        if (codeIndex < field.items.length && char !== field.code && codeIndex >= 0) {
+            await handleImageClick(field.items[codeIndex-1], field.id);
             field.code = char; 
         }
     }
@@ -164,7 +179,7 @@
   function handleItemSelect(item) {
       if (currentField) {
           handleImageClick(item, currentField.id);
-          updateQueryParam(item, currentField.id);
+          setCodeData(item, currentField.id);
       }
   }
 
@@ -223,7 +238,7 @@
         }
   }
 
-  function updateQueryParam(item, idPrefix) {
+  function setCodeData(item, idPrefix) {
     const currentField = fields.find(field => field.id === idPrefix);
     let  newCode = COMPONENTCODE[item.id];
     currentField.code = newCode;
@@ -248,6 +263,13 @@
     } catch (error) {
       console.error("URL 복사에 실패했습니다:", error);
     }
+  }
+  function onTapReset(){
+    fields.map(field => {
+           const currentIndex = field.items.findIndex(item => item.src === field.default);
+           handleImageClick(field.items[currentIndex], field.id);
+        });
+    isConfirmSheetVisible = false;
   }
 </script>
 
@@ -274,8 +296,15 @@
       {/each}
   </div>
 
-  <div class="action-button" on:click={() => showDownloadSheet()}>
-     이미지 저장
+  <div class="action-button-row">
+    <div class="action-button" on:click={() => isConfirmSheetVisible = true}>
+      초기화
+   </div>
+   <div style="width:20px;">
+   </div>
+    <div class="action-button" on:click={() => showDownloadSheet()}>
+      저장
+   </div>
   </div>
 </div>
 
@@ -285,7 +314,7 @@
   <ImageSelector items={currentField ? currentField.items : []} onImageClick={handleItemSelect} />
 </BottomSheet>
 
-<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={applyCodeData} onTapBottomButton={clearPrevData} title='이전 작업을 이어서 하시겠어요?' topButtonText='네, 좋아요' bottomButtonText = '새로 할게요' icon='restore'/>
+<ImageConfirmSheet visible={isConfirmSheetVisible} onTapTopButton={onTapReset} onTapBottomButton={hideBottomSheet} title='처음부터 다시 시작할까요?' topButtonText='네, 좋아요' bottomButtonText = '그냥 둘게요' icon='restore'/>
 
 <ImageConfirmSheet visible={isRedirectNoticeSheetVisible} onTapTopButton={copyCurrentUrl} onTapBottomButton={hideBottomSheet} 
       title='인앱 브라우저에서는 저장이 제한됩니다.'  subtitle='링크를 복사하고 Safari에서 이미지를 저장해 주세요.' topButtonText='링크 복사할게요' bottomButtonText = '다음에 할게요' icon='notice'/>
