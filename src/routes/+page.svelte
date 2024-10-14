@@ -92,11 +92,6 @@
                     clearPrevData();
                     return;
                   }
-
-                  let code = localStorage.getItem('code');
-                  if(code){
-                     isConfirmSheetVisible = true;
-                  }
               }
           }
       } catch (error) {
@@ -250,7 +245,7 @@
   }
 
   function onTapCopyRight(){
-    // isCopyrightModalVisible = true;
+    isCopyrightModalVisible = true;
   }
   
   async function copyCurrentUrl() {
@@ -275,7 +270,7 @@
 
 <!-- Layout -->
 <div class="screen">
-    <div class="copyright">
+    <div class="copyright" on:click={() => onTapCopyRight()}>
         <img src='/icon/copyright.svg' oncontextmenu="return false"  unselectable="on"/>
     </div>
     

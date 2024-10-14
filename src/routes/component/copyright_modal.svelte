@@ -1,8 +1,7 @@
 <script>
     export let isModalVisible = false;  // State to control modal visibility
     export let onClose; // Prop for the close action handler
-    let userAgentInfo = navigator.userAgent;  // Fetch the user agent information
-  
+    
     // Helper function to handle background click
     function handleBackgroundClick(event) {
       if (event.target === event.currentTarget) {
@@ -20,7 +19,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background-color: white;
+      background-color: #2c2c2e;
       padding: 20px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       border-radius: 8px;
@@ -43,15 +42,20 @@
     .close-btn {
       margin-top: 20px;
       padding: 8px 12px;
-      background-color: #f44336;
+      height: 40px;
+      background-color: #9552D4; 
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 20px;
+	    font-family: 'Pretendard';
+	    font-weight: 700;
+	    cursor: pointer;
     }
   
     .close-btn:hover {
-      background-color: #d32f2f;
+      background-color: #9552D4; 
     }
   
   </style>
@@ -61,12 +65,11 @@
   {#if isModalVisible}
     <div class="modal-overlay" on:click={onClose}></div>
     <div class="modal">
-      <h2>User Agent Info</h2>
-      <p>{userAgentInfo}</p>
-      <p>{document.referrer}</p>
-      <p>{window.navigator.standalone}</p>
-      <p>{window.fullScreen}</p>
-      <p>{!window.screenTop && !window.screenY}</p>
-      <button class="close-btn" on:click={onClose}>Close</button>
+      <div class="main-title">
+        <h3>© 2024 GunWoong.<br>
+          All Rights Reserved.
+        </h3>
+      </div>
+      <button class="close-btn" on:click={onClose}>확인</button>
     </div>
   {/if}
